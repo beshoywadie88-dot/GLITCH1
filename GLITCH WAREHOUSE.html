@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>جليتش بلايستيشن & كافيه | إدارة المخزون والجرد الأسبوعي</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Font: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* =====================================================================
+       THEME VARIABLES (DARK MODE DEFAULT & LIGHT MODE)
+       ===================================================================== */
+    :root {
+      --bg-page: #0B0F19;
+      --bg-header: rgba(15, 23, 42, 0.88);
+      --bg-card: #111827;
+      --bg-subcard: #090D16;
+      --bg-input: #090D16;
+      --bg-table-head: #090D16;
+      --bg-row-hover: rgba(30, 41, 59, 0.55);
+      --bg-pill: #1E293B;
+      --border-main: #1E293B;
+      --border-input: #334155;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.45);
+    }
+
+    html.light-theme {
+      --bg-page: #F1F5F9;
+      --bg-header: rgba(255, 255, 255, 0.94);
+      --bg-card: #FFFFFF;
+      --bg-subcard: #F8FAFC;
+      --bg-input: #FFFFFF;
+      --bg-table-head: #F1F5F9;
+      --bg-row-hover: #F8FAFC;
+      --bg-pill: #E2E8F0;
+      --border-main: #E2E8F0;
+      --border-input: #CBD5E1;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --shadow-card: 0 10px 25px -5px rgba(15, 23, 42, 0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Theme-aware Surface Classes */
+    .app-header {
+      background-color: var(--bg-header);
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .app-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-main);
+      box-shadow: var(--shadow-card);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .app-subcard {
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-main);
+    }
+
+    .app-pill {
+      background-color: var(--bg-pill);
+      border: 1px solid var(--border-main);
+      color: var(--text-primary);
+    }
+
+    .app-input {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-input);
+      color: var(--text-primary);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .app-input:focus {
+      outline: none;
+      border-color: #06B6D4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18);
+    }
+
+    .app-table-head {
+      background-color: var(--bg-table-head);
+      border-bottom: 1px solid var(--border-main);
+      color: var(--text-secondary);
+    }
+
+    .app-table-row {
+      border-bottom: 1px solid var(--border-main);
+      transition: background-color 0.15s ease;
+    }
+
+    .app-table-row:hover {
+      background-color: var(--bg-row-hover);
+    }
+
+    .app-table-foot {
+      background-color: var(--bg-table-head);
+      border-top: 2px solid rgba(6, 182, 212, 0.45);
+    }
+
+    .text-main { color: var(--text-primary); }
+    .text-sub { color: var(--text-secondary); }
+    .text-dim { color: var(--text-muted); }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-page);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06B6D4;
+    }
+
+    /* Drag and Drop Styling */
+    .dragging-row {
+      opacity: 0.45;
+      border: 2px dashed #06B6D4 !important;
+    }
+    .drag-over-row {
+      border-top: 3px solid #EC4899 !important;
+    }
+
+    /* Clean Number Inputs */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* =====================================================================
+       PRINT / PDF EXPORT STYLING
+       ===================================================================== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+      body {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .app-card, .app-subcard, .app-table-head, .app-table-foot {
+        background: #FFFFFF !important;
+        border-color: #CBD5E1 !important;
+        box-shadow: none !important;
+        color: #0F172A !important;
+      }
+      .text-main, .text-sub, .text-dim {
+        color: #0F172A !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 12px !important;
+      }
+      th, td {
+        border: 1px solid #CBD5E1 !important;
+        padding: 7px 6px !important;
+        color: #0F172A !important;
+      }
+      th {
+        background-color: #F1F5F9 !important;
+        font-weight: 800 !important;
+      }
+      .print-surplus {
+        color: #15803D !important;
+        font-weight: 800 !important;
+      }
+      .print-shortage {
+        color: #B91C1C !important;
+        font-weight: 800 !important;
+      }
+      .print-matched {
+        color: #0369A1 !important;
+        font-weight: 700 !important;
+      }
+
+      /* Mode-based print visibility (Blank Audit Sheet vs. History Report) */
+      body.print-mode-blank #blankAuditSheetPrint {
+        display: block !important;
+      }
+      body.print-mode-blank #historyReportPrintArea {
+        display: none !important;
+      }
+      body.print-mode-history #historyReportPrintArea {
+        display: block !important;
+      }
+      body.print-mode-history #blankAuditSheetPrint {
+        display: none !important;
+      }
+      body:not(.print-mode-blank):not(.print-mode-history) #blankAuditSheetPrint {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+  <!-- Ambient Glow (Screen Only) -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden no-print z-0">
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -left-24 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toastContainer" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print px-4 sm:px-0"></div>
+
+  <!-- =====================================================================
+       MODALS (CONFIRMATION, EDIT ITEM, EDIT AUDIT BATCH, FACTORY RESET)
+       ===================================================================== -->
+  <!-- General Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print">
+    <div class="app-card rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center gap-3 text-pink-500 mb-3">
+        <div class="p-2.5 bg-pink-500/15 rounded-xl border border-pink-500/30">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <h3 id="confirmTitle" class="text-xl font-extrabold text-main">تأكيد الإجراء</h3>
+      </div>
+      <p id="confirmMessage" class="text-sub text-sm leading-relaxed mb-6">هل أنت متأكد؟</p>
+      <div class="flex items-center justify-end gap-3">
+        <button type="button" id="confirmCancelBtn" class="app-pill px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-85 transition">
+          إلغاء
+        </button>
+        <button type="button" id="confirmOkBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold text-sm shadow-lg transition">
+          تأكيد
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Item Modal -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print">
+    <div class="app-card rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 bg-cyan-500/15 rounded-xl border border-cyan-500/30 text-cyan-500">
+            <i data-lucide="edit-3" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-extrabold text-main">تعديل بيانات الصنف</h3>
+        </div>
+        <button type="button" onclick="closeEditModal()" class="text-dim hover:text-main p-1.5 rounded-lg transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="editItemForm" class="space-y-4">
+        <input type="hidden" id="editItemId" />
+        <div>
+          <label for="editItemName" class="block text-sm font-bold text-sub mb-1.5">اسم الصنف</label>
+          <input type="text" id="editItemName" required class="app-input w-full rounded-xl px-4 py-3 text-sm font-bold" />
+        </div>
+        <div>
+          <label for="editItemPrice" class="block text-sm font-bold text-sub mb-1.5">السعر الأساسي (ج.م)</label>
+          <input type="number" id="editItemPrice" step="0.01" min="0" required class="app-input w-full rounded-xl px-4 py-3 text-sm font-bold" />
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeEditModal()" class="app-pill px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-85 transition">
+            إلغاء
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg transition">
+            حفظ التعديلات
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       NEW MODAL: EDIT SAVED AUDIT RECORD / BATCH (تعديل سجل الجرد)
+       Allows fixing mistakes in date, prices, system qty, or actual qty
+       with instant recalculation of differences, surplus, shortage & net.
+       ===================================================================== -->
+  <div id="editAuditModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-5 no-print">
+    <div class="app-card rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border-2 border-amber-500/40">
+      
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-[var(--border-main)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
+            <i data-lucide="file-edit" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="text-lg sm:text-xl font-black text-main">تعديل سجل الجرد لتلافي الأخطاء</h3>
+            <p id="editAuditModalSubtitle" class="text-xs text-dim font-semibold mt-0.5">
+              عدّل التاريخ أو الأسعار أو كميات السيستم والفعلي وسيتم إعادة حساب الفروقات لحظياً
+            </p>
+          </div>
+        </div>
+
+        <button type="button" onclick="closeEditAuditModal()" class="app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-dim hover:text-main flex items-center gap-1.5 self-end sm:self-auto transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          <span>إغلاق</span>
+        </button>
+      </div>
+
+      <!-- Modal Toolbar: Batch Selector (when multiple audits exist on a date), Date Input, Quick Fix Tools & Search -->
+      <div class="p-4 app-subcard border-b border-[var(--border-main)] space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          
+          <!-- Batch Selector (if multiple audits share the same date or user wants to switch) -->
+          <div id="editAuditBatchSelectWrapper" class="md:col-span-4 hidden">
+            <label for="editAuditBatchSelect" class="block text-xs font-extrabold text-sub mb-1">اختر عملية الجرد للتعديل</label>
+            <select id="editAuditBatchSelect" onchange="switchEditingAuditBatch(this.value)"
+              class="app-input w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-bold">
+            </select>
+          </div>
+
+          <!-- Edit Audit Date -->
+          <div id="editAuditDateWrapper" class="md:col-span-3">
+            <label for="editAuditDateInput" class="block text-xs font-extrabold text-sub mb-1 flex items-center gap-1">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>تاريخ الجرد</span>
+            </label>
+            <input type="date" id="editAuditDateInput"
+              class="app-input w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-bold" />
+          </div>
+
+          <!-- Search Inside Audit Modal -->
+          <div id="editAuditSearchWrapper" class="md:col-span-5">
+            <label for="editAuditSearchInput" class="block text-xs font-extrabold text-sub mb-1">بحث سريع داخل أصناف الجرد</label>
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 text-dim absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="editAuditSearchInput" oninput="renderEditAuditModalTable()" placeholder="اكتب اسم الصنف..."
+                class="app-input w-full rounded-xl pr-9 pl-3 py-2 text-xs sm:text-sm font-semibold" />
+            </div>
+          </div>
+
+          <!-- Quick Mistake-Fix Action: Match Actual = System -->
+          <div class="md:col-span-4 flex items-center justify-end gap-2">
+            <button type="button" onclick="matchAllActualToSystemInModal()" title="جعل الفعلي مساوياً للسيستم لتصفير الفروقات"
+              class="w-full py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-500 border border-sky-500/30 font-extrabold text-xs flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="check-check" class="w-4 h-4"></i>
+              <span>مطابقة الفعلي مع السيستم (تصفير الفروق)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Calculation Summary Bar Inside Modal -->
+        <div class="pt-2 border-t border-[var(--border-main)] flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-cyan-500">إجمالي السيستم: <span id="modalTotalSystem">0</span></span>
+            <span class="text-dim">|</span>
+            <span class="text-pink-500">إجمالي الفعلي: <span id="modalTotalActual">0</span></span>
+            <span class="text-dim">|</span>
+            <span class="text-emerald-500">الزيادة: <span id="modalTotalSurplus">+0.00 ج.م</span></span>
+            <span class="text-dim">|</span>
+            <span class="text-rose-500">العجز: <span id="modalTotalShortage">0.00 ج.م</span></span>
+          </div>
+          <div>
+            <span class="text-main">الصافي: </span>
+            <span id="modalNetMoney" class="text-cyan-500 font-black">0.00 ج.م</span>
+            <span id="modalNetQty" class="text-dim mr-1">(0 قطعة)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editable Rows Table -->
+      <div class="flex-1 overflow-y-auto overflow-x-auto">
+        <table class="w-full text-right border-collapse">
+          <thead class="sticky top-0 z-10">
+            <tr class="app-table-head text-xs">
+              <th class="py-3 px-3 font-extrabold w-12 text-center">م</th>
+              <th class="py-3 px-3 font-extrabold">اسم الصنف</th>
+              <th class="py-3 px-2 font-extrabold w-28 text-center">السعر (ج.م)</th>
+              <th class="py-3 px-2 font-extrabold w-28 text-center text-cyan-500">السيستم</th>
+              <th class="py-3 px-2 font-extrabold w-28 text-center text-pink-500">الفعلي</th>
+              <th class="py-3 px-2 font-extrabold w-24 text-center">الفرق (قطع)</th>
+              <th class="py-3 px-3 font-extrabold w-32 text-center">الفرق (فلوس)</th>
+              <th class="py-3 px-2 font-extrabold w-16 text-center" title="مطابقة هذا الصنف فقط">مطابقة</th>
+            </tr>
+          </thead>
+          <tbody id="editAuditModalBody" class="text-xs sm:text-sm">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer Actions -->
+      <div class="p-4 sm:p-5 border-t border-[var(--border-main)] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-dim font-semibold">
+          سيتم تحديث سجل الجرد في قاعدة البيانات المحلية وتحديث التقارير فوراً بعد الحفظ.
+        </p>
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <button type="button" onclick="closeEditAuditModal()" class="app-pill px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-85 transition">
+            إلغاء التعديلات
+          </button>
+          <button type="button" onclick="saveEditedAuditBatch()"
+            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-white font-extrabold text-sm shadow-lg shadow-amber-500/25 flex items-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>حفظ تعديلات الجرد</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factory Reset Double-Confirmation Modal -->
+  <div id="factoryResetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4 no-print">
+    <div class="app-card border-2 border-rose-500/50 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center gap-3 text-rose-500">
+        <div class="p-3 bg-rose-500/15 rounded-2xl border border-rose-500/30">
+          <i data-lucide="octagon-alert" class="w-7 h-7"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-black text-main">تحذير نهائي! مسح شامل</h3>
+          <p class="text-xs text-rose-500 font-bold">لا يمكن التراجع عن هذا الإجراء بعد التنفيذ</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs sm:text-sm text-sub leading-relaxed">
+        أنت على وشك حذف <strong id="resetSummaryText" class="text-rose-500">كافة البيانات</strong> وإعادة ضبط برنامج <strong>جليتش بلايستيشن & كافيه</strong> بالكامل.
+      </div>
+
+      <div>
+        <label for="resetConfirmWordInput" class="block text-xs font-bold text-sub mb-2">
+          للتأكيد، اكتب كلمة <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-500 font-black select-all">مسح</span> في الخانة التالية:
+        </label>
+        <input type="text" id="resetConfirmWordInput" oninput="validateResetConfirmationInput()" placeholder="اكتب كلمة: مسح"
+          class="app-input w-full rounded-xl px-4 py-3 text-center font-extrabold text-sm" />
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-1">
+        <button type="button" onclick="closeFactoryResetModal()" class="app-pill px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-85 transition">
+          إلغاء وتراجع
+        </button>
+        <button type="button" id="executeFactoryResetBtn" onclick="executeFactoryReset()" disabled
+          class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-35 disabled:pointer-events-none text-white font-extrabold text-sm shadow-lg transition">
+          تأكيد المسح النهائي
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       HEADER & NAVIGATION BAR
+       ===================================================================== -->
+  <header class="app-header relative z-20 backdrop-blur-xl sticky top-0 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+      
+      <!-- Top Row: Brand Identity + Quick Stats + Theme Toggle -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Brand Logo & Title -->
+        <div class="flex items-center gap-3.5">
+          <div class="relative group shrink-0">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
+            <div class="relative w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center border border-white/15">
+              <i data-lucide="gamepad-2" class="w-7 h-7 text-cyan-400"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-l from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                جليتش بلايستيشن & كافيه
+              </h1>
+              <span class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-cyan-500/15 text-cyan-500 border border-cyan-500/30">
+                GLITCH SYSTEM
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-dim font-semibold mt-0.5 flex items-center gap-1.5">
+              <i data-lucide="coffee" class="w-3.5 h-3.5 text-pink-500"></i>
+              <span>نظام إدارة المخزون والجرد الأسبوعي الذكي</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Counters & Theme Toggle -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="app-pill px-3.5 py-2 rounded-xl flex items-center gap-2">
+            <i data-lucide="package" class="w-4 h-4 text-cyan-500"></i>
+            <span class="text-xs text-dim font-semibold">الأصناف:</span>
+            <span id="headerItemsCount" class="text-sm font-black text-main">0</span>
+          </div>
+
+          <div class="app-pill px-3.5 py-2 rounded-xl flex items-center gap-2">
+            <i data-lucide="clipboard-check" class="w-4 h-4 text-pink-500"></i>
+            <span class="text-xs text-dim font-semibold">عمليات الجرد:</span>
+            <span id="headerAuditsCount" class="text-sm font-black text-main">0</span>
+          </div>
+
+          <!-- Light / Dark Theme Toggle Button -->
+          <button type="button" id="themeToggleBtn" onclick="toggleTheme()"
+            class="app-pill px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs sm:text-sm font-extrabold hover:border-cyan-500 transition cursor-pointer active:scale-95">
+            <i id="themeToggleIcon" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+            <span id="themeToggleLabel" class="text-main">الوضع النهاري</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: 4 Main Tabs Navigation -->
+      <nav class="grid grid-cols-2 lg:grid-cols-4 gap-2 p-1.5 rounded-2xl app-subcard">
+        <button type="button" id="tabBtn-items" onclick="switchTab('items')"
+          class="tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg">
+          <i data-lucide="package-plus" class="w-4 h-4 shrink-0"></i>
+          <span>1. إدارة الأصناف</span>
+        </button>
+
+        <button type="button" id="tabBtn-audit" onclick="switchTab('audit')"
+          class="tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 text-dim hover:text-main">
+          <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0"></i>
+          <span>2. إضافة جرد جديد</span>
+        </button>
+
+        <button type="button" id="tabBtn-history" onclick="switchTab('history')"
+          class="tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 text-dim hover:text-main">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 shrink-0"></i>
+          <span>3. سجل الجرد والتقارير</span>
+        </button>
+
+        <button type="button" id="tabBtn-backup" onclick="switchTab('backup')"
+          class="tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 text-dim hover:text-main">
+          <i data-lucide="database-backup" class="w-4 h-4 shrink-0"></i>
+          <span>4. النسخ الاحتياطي والضبط</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN CONTENT AREA
+       ===================================================================== -->
+  <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ===================================================================
+         TAB 1: ITEMS MANAGEMENT (إدارة الأصناف)
+         =================================================================== -->
+    <section id="tab-items" class="tab-panel space-y-6 no-print">
+      
+      <!-- Add New Item Form Card -->
+      <div class="app-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-500">
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-extrabold text-main">إضافة صنف جديد للمخزون</h2>
+              <p class="text-xs text-dim">أدخل اسم الصنف وسعر البيع الأساسي ليظهر في قائمة الجرد</p>
+            </div>
+          </div>
+
+          <button type="button" onclick="loadSampleItems()"
+            class="app-pill px-4 py-2 rounded-xl text-xs font-extrabold text-cyan-500 hover:border-cyan-500 flex items-center justify-center gap-1.5 transition self-start sm:self-auto">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>إضافة أصناف مقترحة للكافيه</span>
+          </button>
+        </div>
+
+        <form id="addItemForm" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+          <div class="sm:col-span-6">
+            <label for="itemNameInput" class="block text-xs font-extrabold text-sub mb-1.5">اسم الصنف</label>
+            <input type="text" id="itemNameInput" required placeholder="مثال: كانز بيبسي / قهوة تركي / إندومي..."
+              class="app-input w-full rounded-xl px-4 py-3 text-sm font-bold" />
+          </div>
+
+          <div class="sm:col-span-3">
+            <label for="itemPriceInput" class="block text-xs font-extrabold text-sub mb-1.5">السعر الأساسي (ج.م)</label>
+            <input type="number" id="itemPriceInput" step="0.01" min="0" required placeholder="0.00"
+              class="app-input w-full rounded-xl px-4 py-3 text-sm font-bold" />
+          </div>
+
+          <div class="sm:col-span-3">
+            <button type="submit"
+              class="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+              <i data-lucide="plus" class="w-5 h-5"></i>
+              <span>إضافة الصنف</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Items List Table Card -->
+      <div class="app-card rounded-2xl overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-[var(--border-main)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="list-ordered" class="w-5 h-5 text-cyan-500"></i>
+            <h3 class="font-extrabold text-main text-base sm:text-lg">قائمة الأصناف المسجلة</h3>
+            <span class="text-xs text-dim hidden md:inline">(اسحب الصنف أو استخدم الأسهم لتغيير ترتيبه والترقيم تلقائي)</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+            <!-- Export Blank Audit Sheet PDF Button -->
+            <button type="button" onclick="exportBlankAuditSheetPDF()"
+              class="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-[0.98] whitespace-nowrap">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+              <span>تصدير PDF لورقة الجرد الفارغة</span>
+            </button>
+
+            <!-- Search Input -->
+            <div class="relative w-full sm:w-60">
+              <i data-lucide="search" class="w-4 h-4 text-dim absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="itemsSearchInput" oninput="renderItemsTable()" placeholder="بحث عن صنف..."
+                class="app-input w-full rounded-xl pr-10 pl-4 py-2 text-xs sm:text-sm font-semibold" />
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="app-table-head text-xs sm:text-sm">
+                <th class="py-3.5 px-3 font-extrabold w-24 text-center">الترتيب</th>
+                <th class="py-3.5 px-3 font-extrabold w-16 text-center">م</th>
+                <th class="py-3.5 px-4 font-extrabold">اسم الصنف</th>
+                <th class="py-3.5 px-4 font-extrabold w-36">السعر الأساسي</th>
+                <th class="py-3.5 px-4 font-extrabold w-32 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody" class="text-sm">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="itemsEmptyState" class="py-14 px-4 text-center">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl app-subcard flex items-center justify-center text-dim">
+            <i data-lucide="package-open" class="w-8 h-8"></i>
+          </div>
+          <h4 class="text-base font-extrabold text-main">لا توجد أصناف مضافة حتى الآن</h4>
+          <p class="text-xs text-dim mt-1 max-w-sm mx-auto">ابدأ بإضافة أصناف الكافيه والبلايستيشن من النموذج بالأعلى أو اضغط على "إضافة أصناف مقترحة".</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         PRINT-ONLY: BLANK FIELD AUDIT SHEET (ورقة الجرد الفارغة للطباعة)
+         =================================================================== -->
+    <section id="blankAuditSheetPrint" class="hidden print-only">
+      <div class="mb-5 border-b-2 border-slate-800 pb-3.5 flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-900">جليتش بلايستيشن & كافيه</h1>
+          <p class="text-sm font-bold text-slate-700 mt-0.5">ورقة جرد ميداني (أصناف ومربعات جرد فارغة)</p>
+        </div>
+        <div class="text-left text-xs text-slate-800 space-y-1">
+          <p><strong>التاريخ والوقت:</strong> <span id="blankSheetDateTime"></span></p>
+          <p><strong>إجمالي عدد الأصناف:</strong> <span id="blankSheetTotalItems">0</span> صنف</p>
+        </div>
+      </div>
+
+      <table class="w-full text-right border-collapse">
+        <thead>
+          <tr>
+            <th style="width: 65px; text-align: center;">م</th>
+            <th>اسم الصنف</th>
+            <th style="width: 150px; text-align: center;">الجرد الفعلي</th>
+          </tr>
+        </thead>
+        <tbody id="blankAuditSheetBody">
+          <!-- Populated dynamically when exporting -->
+        </tbody>
+      </table>
+
+      <div class="mt-8 pt-4 border-t border-slate-400 space-y-4 text-xs text-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold">ملاحظات الجرد:</span>
+          <span class="flex-1 border-b border-dotted border-slate-600 h-4"></span>
+        </div>
+        <div class="flex justify-between font-extrabold pt-2">
+          <div>اسم القائم بالجرد: ........................................</div>
+          <div>التوقيع: ........................................</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         TAB 2: NEW INVENTORY AUDIT (إضافة جرد جديد)
+         =================================================================== -->
+    <section id="tab-audit" class="tab-panel hidden space-y-6 no-print">
+      
+      <!-- Audit Controls Card -->
+      <div class="app-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+          
+          <!-- Date & Load / Reset Buttons -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 flex-wrap">
+            <div>
+              <label for="auditDateInput" class="block text-xs font-extrabold text-sub mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="calendar" class="w-4 h-4 text-pink-500"></i>
+                <span>تاريخ الجرد الأسبوعي</span>
+              </label>
+              <input type="date" id="auditDateInput"
+                class="app-input w-full sm:w-48 rounded-xl px-4 py-2.5 text-sm font-bold" />
+            </div>
+
+            <button type="button" onclick="startNewAudit()"
+              class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-extrabold text-sm shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              <span>بدء / تحميل جدول الجرد</span>
+            </button>
+
+            <!-- Quick Mistake-Fix Button for Current Live Audit -->
+            <button type="button" onclick="resetCurrentAuditQuantities()" title="تصفير أرقام الجرد الحالي لإعادة الإدخال بدون خطأ"
+              class="app-pill py-2.5 px-4 rounded-xl text-amber-500 hover:border-amber-500 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition active:scale-[0.98]">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              <span>تصفير الأرقام الحالية</span>
+            </button>
+          </div>
+
+          <!-- Status Filter Buttons -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-extrabold text-dim ml-1">فلتر العرض:</span>
+            <button type="button" id="auditFilter-all" onclick="setAuditFilter('all')"
+              class="audit-filter-btn px-3 py-2 rounded-xl text-xs font-extrabold bg-cyan-500 text-slate-950 transition">
+              جميع الأصناف (<span id="countAuditAll">0</span>)
+            </button>
+            <button type="button" id="auditFilter-surplus" onclick="setAuditFilter('surplus')"
+              class="audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-emerald-500 transition">
+              الزيادة + (<span id="countAuditSurplus">0</span>)
+            </button>
+            <button type="button" id="auditFilter-shortage" onclick="setAuditFilter('shortage')"
+              class="audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-rose-500 transition">
+              الناقصة - (<span id="countAuditShortage">0</span>)
+            </button>
+            <button type="button" id="auditFilter-matched" onclick="setAuditFilter('matched')"
+              class="audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-sky-500 transition">
+              المظبوطة 0 (<span id="countAuditMatched">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Audit Info & Breakdown Bar -->
+        <div class="mt-4 pt-4 border-t border-[var(--border-main)] flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-dim font-semibold">التاريخ النشط للجرد:</span>
+            <span id="activeAuditDateBadge" class="px-2.5 py-1 rounded-lg bg-pink-500/15 text-pink-500 font-extrabold border border-pink-500/30"></span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 font-extrabold">
+            <span id="auditSurplusBreakdown" class="text-emerald-500">زيادة: +0 قطعة (0.00 ج.م)</span>
+            <span class="text-dim">|</span>
+            <span id="auditShortageBreakdown" class="text-rose-500">عجز: 0 قطعة (0.00 ج.م)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Working Table Card -->
+      <div class="app-card rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="app-table-head text-xs sm:text-sm">
+                <th class="py-3.5 px-3 font-extrabold w-14 text-center">م</th>
+                <th class="py-3.5 px-4 font-extrabold">اسم الصنف</th>
+                <th class="py-3.5 px-3 font-extrabold w-28">السعر</th>
+                <th class="py-3.5 px-3 font-extrabold w-32 text-center text-cyan-500">السيستم</th>
+                <th class="py-3.5 px-3 font-extrabold w-32 text-center text-pink-500">الفعلي</th>
+                <th class="py-3.5 px-3 font-extrabold w-28 text-center">الفرق (قطع)</th>
+                <th class="py-3.5 px-4 font-extrabold w-36 text-center">الفرق (فلوس)</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody" class="text-sm">
+              <!-- Populated by JS -->
+            </tbody>
+            <tfoot class="app-table-foot font-extrabold text-sm">
+              <tr>
+                <td colspan="3" class="py-4 px-4 text-main font-black">
+                  الإجمالي الكلي للجرد:
+                </td>
+                <td id="auditTotalSystemCell" class="py-4 px-3 text-center text-cyan-500 font-black">0</td>
+                <td id="auditTotalActualCell" class="py-4 px-3 text-center text-pink-500 font-black">0</td>
+                <td id="auditTotalQtyCell" class="py-4 px-3 text-center font-black text-base">0</td>
+                <td id="auditTotalMoneyCell" class="py-4 px-4 text-center font-black text-base">0.00 ج.م</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Empty State for Filtered Audit -->
+        <div id="auditEmptyState" class="hidden py-12 px-4 text-center">
+          <p class="text-sm font-bold text-dim">لا توجد أصناف مطابقة للفلتر المحدد حالياً.</p>
+        </div>
+
+        <!-- Save Audit Footer Action -->
+        <div class="p-4 sm:p-5 border-t border-[var(--border-main)] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="text-xs text-dim font-semibold">
+            عند الضغط على "حفظ وترحيل الجرد" سيتم تسجيل جميع البيانات في التبويب الثالث (سجل الجرد والتقارير) ويمكنك تعديلها لاحقاً في أي وقت.
+          </p>
+          <button type="button" onclick="saveCurrentAudit()"
+            class="w-full sm:w-auto py-3 px-7 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+            <i data-lucide="save" class="w-5 h-5"></i>
+            <span>حفظ وترحيل الجرد</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         TAB 3: AUDIT HISTORY & PDF EXPORT (سجل الجرد والتقارير)
+         =================================================================== -->
+    <section id="tab-history" class="tab-panel hidden space-y-6">
+      <div id="historyReportPrintArea" class="space-y-6">
+      
+      <!-- Print-Only Formal Header (Appears ONLY when exporting PDF / Printing) -->
+      <div class="hidden print-only mb-6 border-b-2 border-slate-800 pb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900">جليتش بلايستيشن & كافيه</h1>
+            <p class="text-sm font-bold text-slate-700 mt-0.5">تقرير الجرد الأسبوعي للمخزون والفروقات المالية</p>
+          </div>
+          <div class="text-left text-xs text-slate-700 space-y-1">
+            <p><strong>تاريخ استخراج التقرير:</strong> <span id="printGeneratedDate"></span></p>
+            <p><strong>فلتر التاريخ:</strong> <span id="printFilterDateLabel">الكل</span></p>
+            <p><strong>فلتر الحالة:</strong> <span id="printFilterStatusLabel">جميع الأصناف</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Filters, Edit Audit & Export PDF Controls (Hidden in Print) -->
+      <div class="app-card rounded-2xl p-5 sm:p-6 no-print">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+            <!-- Date Filter -->
+            <div>
+              <label for="historyDateFilter" class="block text-xs font-extrabold text-sub mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="calendar-search" class="w-4 h-4 text-cyan-500"></i>
+                <span>فلتر حسب تاريخ الجرد</span>
+              </label>
+              <select id="historyDateFilter" onchange="renderHistoryTable()"
+                class="app-input w-full rounded-xl px-4 py-2.5 text-sm font-bold">
+                <option value="all">جميع التواريخ المحفوظة</option>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+              <label for="historyStatusFilter" class="block text-xs font-extrabold text-sub mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="filter" class="w-4 h-4 text-pink-500"></i>
+                <span>فلتر حالة الأصناف</span>
+              </label>
+              <select id="historyStatusFilter" onchange="renderHistoryTable()"
+                class="app-input w-full rounded-xl px-4 py-2.5 text-sm font-bold">
+                <option value="all">جميع الأصناف (الكل)</option>
+                <option value="surplus">الأصناف الزيادة (+)</option>
+                <option value="shortage">الأصناف الناقصة (-)</option>
+                <option value="matched">الأصناف المظبوطة (0)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Edit Audit, Delete Date Batch & Export PDF Buttons -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Dedicated Edit Audit Button -->
+            <button type="button" id="editAuditBtn" onclick="openEditAuditModal()"
+              title="تعديل بيانات الجرد المحفوظ لتصحيح أي خطأ"
+              class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm shadow-md shadow-amber-500/20 flex items-center gap-2 transition active:scale-[0.98]">
+              <i data-lucide="edit" class="w-4 h-4"></i>
+              <span>تعديل الجرد</span>
+            </button>
+
+            <button type="button" id="deleteBatchBtn" onclick="confirmDeleteAuditBatch()"
+              class="hidden py-2.5 px-4 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 border border-rose-500/30 font-extrabold text-sm flex items-center gap-2 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <span>حذف جرد هذا التاريخ</span>
+            </button>
+
+            <button type="button" onclick="exportReportToPDF()"
+              class="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600 hover:from-rose-400 hover:to-purple-500 text-white font-extrabold text-sm shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+              <i data-lucide="file-down" class="w-5 h-5"></i>
+              <span>تصدير التقرير بصيغة PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Stat Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="app-card rounded-2xl p-4">
+          <p class="text-xs text-dim font-bold">عدد السجلات المعروضة</p>
+          <p id="historyStatCount" class="text-xl sm:text-2xl font-black text-main mt-1">0 صنف</p>
+        </div>
+        <div class="app-card rounded-2xl p-4 border-emerald-500/30">
+          <p class="text-xs text-emerald-500 font-bold">إجمالي الزيادات (+)</p>
+          <p id="historyStatSurplus" class="text-xl sm:text-2xl font-black text-emerald-500 mt-1">+0.00 ج.م</p>
+        </div>
+        <div class="app-card rounded-2xl p-4 border-rose-500/30">
+          <p class="text-xs text-rose-500 font-bold">إجمالي العجوزات (-)</p>
+          <p id="historyStatShortage" class="text-xl sm:text-2xl font-black text-rose-500 mt-1">0.00 ج.م</p>
+        </div>
+        <div class="app-card rounded-2xl p-4">
+          <p class="text-xs text-dim font-bold">صافي فرق الفلوس والقطع</p>
+          <p id="historyStatMoneyDiff" class="text-xl sm:text-2xl font-black text-pink-500 mt-1">0.00 ج.م</p>
+          <p id="historyStatQtyDiff" class="text-xs font-bold text-dim mt-0.5">0 قطعة</p>
+        </div>
+      </div>
+
+      <!-- History Records Table -->
+      <div class="app-card rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="app-table-head text-xs sm:text-sm">
+                <th class="py-3.5 px-3 font-extrabold w-12 text-center">م</th>
+                <th class="py-3.5 px-3 font-extrabold w-28">التاريخ</th>
+                <th class="py-3.5 px-4 font-extrabold">اسم الصنف</th>
+                <th class="py-3.5 px-3 font-extrabold w-24">السعر</th>
+                <th class="py-3.5 px-3 font-extrabold w-24 text-center">السيستم</th>
+                <th class="py-3.5 px-3 font-extrabold w-24 text-center">الفعلي</th>
+                <th class="py-3.5 px-3 font-extrabold w-28 text-center">الفرق (عدد)</th>
+                <th class="py-3.5 px-4 font-extrabold w-32 text-center">الفرق (فلوس)</th>
+                <th class="py-3.5 px-2 font-extrabold w-16 text-center no-print">تعديل</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="text-sm">
+              <!-- Populated by JS -->
+            </tbody>
+            <tfoot class="app-table-foot font-extrabold">
+              <tr>
+                <td colspan="6" class="py-4 px-4 text-main font-black text-sm sm:text-base">
+                  إجمالي الفروقات للتقرير المعروض:
+                </td>
+                <td id="historyFooterQty" class="py-4 px-3 text-center font-black text-base text-main">0</td>
+                <td id="historyFooterMoney" class="py-4 px-4 text-center font-black text-base text-main">0.00 ج.م</td>
+                <td class="py-4 px-2 no-print"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="historyEmptyState" class="py-14 px-4 text-center no-print">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl app-subcard flex items-center justify-center text-dim">
+            <i data-lucide="folder-open" class="w-8 h-8"></i>
+          </div>
+          <h4 class="text-base font-extrabold text-main">لا توجد سجلات جرد مطابقة</h4>
+          <p class="text-xs text-dim mt-1 max-w-sm mx-auto">قم بإجراء جرد أسبوعي من التبويب الثاني واضغط على "حفظ وترحيل الجرد" ليظهر هنا.</p>
+        </div>
+      </div>
+
+      <!-- Print Footer Signatures -->
+      <div class="hidden print-only mt-10 pt-6 border-t border-slate-400 flex justify-between text-xs font-extrabold text-slate-800">
+        <div>توقيع مسؤول المخزن / الكاشير: ..............................</div>
+        <div>اعتماد إدارة جليتش بلايستيشن & كافيه: ..............................</div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         TAB 4: BACKUP, RESTORE & FACTORY RESET (النسخ الاحتياطي والضبط)
+         =================================================================== -->
+    <section id="tab-backup" class="tab-panel hidden space-y-6 no-print">
+
+      <!-- Storage Overview Banner -->
+      <div class="app-card rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-500">
+            <i data-lucide="hard-drive" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-main">مركز النسخ الاحتياطي وإدارة البيانات</h2>
+            <p class="text-xs sm:text-sm text-dim mt-0.5">احفظ نسخة احتياطية على جهازك بانتظام لضمان أمان بيانات المخزون وسجلات الجرد</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="app-subcard px-4 py-2.5 rounded-xl text-center">
+            <span class="block text-[11px] text-dim font-bold">الأصناف المحفوظة</span>
+            <span id="backupItemsCount" class="text-lg font-black text-cyan-500">0</span>
+          </div>
+          <div class="app-subcard px-4 py-2.5 rounded-xl text-center">
+            <span class="block text-[11px] text-dim font-bold">سجلات الجرد</span>
+            <span id="backupAuditsCount" class="text-lg font-black text-purple-500">0</span>
+          </div>
+          <div class="app-subcard px-4 py-2.5 rounded-xl text-center">
+            <span class="block text-[11px] text-dim font-bold">حجم البيانات</span>
+            <span id="backupStorageSize" class="text-lg font-black text-emerald-500">0 KB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export & Restore Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- 1. Export Backup Card -->
+        <div class="app-card rounded-2xl p-6 flex flex-col justify-between space-y-6">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-500 text-xs font-extrabold">
+              <i data-lucide="download-cloud" class="w-4 h-4"></i>
+              <span>تصدير نسخة احتياطية محلية</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-main">حفظ نسخة احتياطية على الجهاز (JSON)</h3>
+            <p class="text-sm text-sub leading-relaxed">
+              سيتم تنزيل ملف نسخة احتياطية كاملة يشمل <strong class="text-main">جميع الأصناف وأسعارها وترتيبها</strong> بالإضافة إلى <strong class="text-main">كافة سجلات الجرد الأسبوعية السابقة</strong>.
+            </p>
+            <div class="app-subcard p-3.5 rounded-xl text-xs flex items-center gap-2.5">
+              <i data-lucide="file-json" class="w-5 h-5 text-cyan-500 shrink-0"></i>
+              <span dir="ltr" class="font-mono text-cyan-500 font-bold truncate">Glitch_Cafe_Backup_YYYY-MM-DD.json</span>
+            </div>
+          </div>
+
+          <button type="button" onclick="exportBackupJSON()"
+            class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-extrabold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2.5 transition active:scale-[0.98]">
+            <i data-lucide="download" class="w-5 h-5"></i>
+            <span>تنزيل النسخة الاحتياطية الآن</span>
+          </button>
+        </div>
+
+        <!-- 2. Restore Backup Card -->
+        <div class="app-card rounded-2xl p-6 flex flex-col justify-between space-y-6">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-500 text-xs font-extrabold">
+              <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+              <span>استعادة البيانات من ملف</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-main">استعادة نسخة احتياطية سابقة</h3>
+            <p class="text-sm text-sub leading-relaxed">
+              اختر ملف النسخة الاحتياطية (<code class="text-purple-500 font-bold">.json</code>) المحفوظ مسبقاً على جهازك لفحص محتوياته واسترجاع كافة الأصناف وسجلات الجرد فوراً.
+            </p>
+
+            <label for="backupFileInput"
+              class="app-subcard mt-2 flex flex-col items-center justify-center p-5 border-2 border-dashed border-[var(--border-input)] hover:border-purple-500 rounded-2xl cursor-pointer transition group">
+              <i data-lucide="folder-up" class="w-8 h-8 text-dim group-hover:text-purple-500 mb-2 transition"></i>
+              <span id="selectedBackupFileName" class="text-sm font-extrabold text-sub group-hover:text-main text-center">
+                اضغط لاختيار ملف النسخة الاحتياطية (.json)
+              </span>
+              <span class="text-xs text-dim mt-1">سيتم فحص الملف وعرض ملخصه قبل الاستعادة</span>
+              <input type="file" id="backupFileInput" accept=".json,application/json" onchange="handleBackupFileSelect(event)" class="hidden" />
+            </label>
+
+            <!-- Preview Box -->
+            <div id="backupPreviewBox" class="hidden p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-purple-500 flex items-center gap-1.5">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+                  <span>ملف نسخة احتياطية صالح!</span>
+                </span>
+                <span id="backupPreviewDate" class="text-[11px] text-dim font-bold"></span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+                <div class="app-subcard p-2 rounded-lg">
+                  <span class="text-dim">الأصناف بالملف: </span>
+                  <strong id="backupPreviewItems" class="text-cyan-500">0</strong>
+                </div>
+                <div class="app-subcard p-2 rounded-lg">
+                  <span class="text-dim">سجلات الجرد: </span>
+                  <strong id="backupPreviewAudits" class="text-pink-500">0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="confirmRestoreBtn" onclick="confirmRestoreBackup()" disabled
+            class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-40 disabled:pointer-events-none text-white font-extrabold text-sm shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2.5 transition active:scale-[0.98]">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+            <span>تأكيد استعادة النسخة الاحتياطية</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Danger Zone: Factory Reset -->
+      <div class="app-card border-2 border-rose-500/40 rounded-2xl p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-500 text-xs font-extrabold">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              <span>منطقة الخطر — إعادة ضبط المصنع</span>
+            </div>
+            <h3 class="text-xl font-black text-main">مسح البرنامج كاملاً وحذف جميع البيانات</h3>
+            <p class="text-sm text-sub leading-relaxed">
+              سيؤدي هذا الإجراء إلى <strong class="text-rose-500">الحذف النهائي والدائم</strong> لكافة الأصناف المسجلة، وجدول الجرد النشط، وجميع سجلات الجرد السابقة من ذاكرة المتصفح، وإعادة البرنامج لحالته الأولى الفارغة تماماً.
+            </p>
+          </div>
+
+          <div class="shrink-0">
+            <button type="button" onclick="initiateFactoryReset()"
+              class="w-full lg:w-auto py-3.5 px-7 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-extrabold text-sm shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2.5 transition active:scale-[0.98]">
+              <i data-lucide="trash-2" class="w-5 h-5"></i>
+              <span>مسح البرنامج كاملاً</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-[var(--border-main)] py-4 px-4 text-center text-xs text-dim no-print">
+    <span>نظام إدارة المخزون والجرد الأسبوعي — </span>
+    <span class="text-cyan-500 font-extrabold">جليتش بلايستيشن & كافيه</span>
+    <span> • يتم حفظ جميع البيانات تلقائياً على جهازك</span>
+  </footer>
+
+  <!-- =====================================================================
+       CLEAN VANILLA JAVASCRIPT APPLICATION LOGIC
+       ===================================================================== -->
+  <script>
+    // LocalStorage Keys
+    const STORAGE_KEYS = {
+      ITEMS: 'glitch_ps_cafe_items_v2',
+      AUDITS: 'glitch_ps_cafe_audits_v2',
+      THEME: 'glitch_ps_cafe_theme_v2'
+    };
+
+    // Global State
+    let items = [];
+    let auditHistory = [];
+    let currentAuditEntries = [];
+    let currentAuditFilter = 'all';
+    let draggedIndex = null;
+    let pendingBackupData = null;
+
+    // Edit Audit Modal State
+    let editingBatchId = null;
+    let editingDraftEntries = [];
+    let candidateBatchesForEdit = [];
+
+    // Initialize Application Safely on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadFromStorage();
+      setDefaultAuditDate();
+      initAuditEntriesFromItems();
+      renderAll();
+      refreshIcons();
+
+      // Clean up print mode classes after printing finishes
+      window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-mode-blank', 'print-mode-history');
+      });
+    });
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // =====================================================================
+    // 1. THEME MANAGEMENT (LIGHT / DARK MODE)
+    // =====================================================================
+    function initTheme() {
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
+      applyTheme(savedTheme);
+    }
+
+    function applyTheme(theme) {
+      const htmlEl = document.documentElement;
+      const iconEl = document.getElementById('themeToggleIcon');
+      const labelEl = document.getElementById('themeToggleLabel');
+
+      if (theme === 'light') {
+        htmlEl.classList.add('light-theme');
+        if (iconEl) {
+          iconEl.setAttribute('data-lucide', 'moon');
+          iconEl.className = 'w-4 h-4 text-indigo-600';
+        }
+        if (labelEl) labelEl.textContent = 'الوضع الليلي';
+      } else {
+        htmlEl.classList.remove('light-theme');
+        if (iconEl) {
+          iconEl.setAttribute('data-lucide', 'sun');
+          iconEl.className = 'w-4 h-4 text-amber-400';
+        }
+        if (labelEl) labelEl.textContent = 'الوضع النهاري';
+      }
+      refreshIcons();
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.contains('light-theme');
+      const nextTheme = isLight ? 'dark' : 'light';
+      localStorage.setItem(STORAGE_KEYS.THEME, nextTheme);
+      applyTheme(nextTheme);
+      showToast(nextTheme === 'light' ? 'تم تفعيل الوضع النهاري' : 'تم تفعيل الوضع الليلي', 'info');
+    }
+
+    // =====================================================================
+    // 2. LOCALSTORAGE LOAD & SAVE
+    // =====================================================================
+    function loadFromStorage() {
+      try {
+        const rawItems = localStorage.getItem(STORAGE_KEYS.ITEMS);
+        const rawAudits = localStorage.getItem(STORAGE_KEYS.AUDITS);
+        items = rawItems ? JSON.parse(rawItems) : [];
+        auditHistory = rawAudits ? JSON.parse(rawAudits) : [];
+        if (!Array.isArray(items)) items = [];
+        if (!Array.isArray(auditHistory)) auditHistory = [];
+      } catch (err) {
+        console.error('Error loading storage:', err);
+        items = [];
+        auditHistory = [];
+      }
+    }
+
+    function saveItemsToStorage() {
+      localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(items));
+      updateHeaderStats();
+      updateBackupStats();
+    }
+
+    function saveAuditsToStorage() {
+      localStorage.setItem(STORAGE_KEYS.AUDITS, JSON.stringify(auditHistory));
+      updateHeaderStats();
+      updateBackupStats();
+    }
+
+    // =====================================================================
+    // 3. FORMATTING & UI HELPERS
+    // =====================================================================
+    function formatMoney(amount) {
+      const num = Number(amount) || 0;
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ج.م';
+    }
+
+    function formatSignedNumber(num) {
+      const n = Number(num) || 0;
+      return n > 0 ? `+${n}` : `${n}`;
+    }
+
+    function formatSignedMoney(amount) {
+      const num = Number(amount) || 0;
+      const formatted = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (num > 0) return `+${formatted} ج.م`;
+      if (num < 0) return `-${formatted} ج.م`;
+      return '0.00 ج.م';
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function setDefaultAuditDate() {
+      const dateInput = document.getElementById('auditDateInput');
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const formattedDate = `${yyyy}-${mm}-${dd}`;
+      if (dateInput) dateInput.value = formattedDate;
+      const badge = document.getElementById('activeAuditDateBadge');
+      if (badge) badge.textContent = formattedDate;
+    }
+
+    function updateHeaderStats() {
+      const itemsCountEl = document.getElementById('headerItemsCount');
+      const auditsCountEl = document.getElementById('headerAuditsCount');
+      if (itemsCountEl) itemsCountEl.textContent = items.length;
+      if (auditsCountEl) auditsCountEl.textContent = auditHistory.length;
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const borderClass = type === 'error'
+        ? 'border-rose-500/60'
+        : type === 'info'
+          ? 'border-cyan-500/60'
+          : 'border-emerald-500/60';
+      const iconName = type === 'error'
+        ? 'alert-circle'
+        : type === 'info'
+          ? 'sparkles'
+          : 'check-circle-2';
+      const iconColor = type === 'error'
+        ? 'text-rose-500'
+        : type === 'info'
+          ? 'text-cyan-500'
+          : 'text-emerald-500';
+
+      toast.className = `app-card pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 ${borderClass} shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0`;
+      toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-5 h-5 shrink-0 ${iconColor}"></i>
+        <span class="text-xs sm:text-sm font-extrabold text-main">${escapeHTML(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      refreshIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function showConfirmDialog(title, message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const okBtn = document.getElementById('confirmOkBtn');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+      };
+
+      cancelBtn.onclick = cleanup;
+      okBtn.onclick = () => {
+        cleanup();
+        onConfirm();
+      };
+    }
+
+    // =====================================================================
+    // 4. TAB NAVIGATION
+    // =====================================================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      const targetPanel = document.getElementById(`tab-${tabId}`);
+      if (targetPanel) targetPanel.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 text-dim hover:text-main';
+      });
+
+      const activeGradients = {
+        items: 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg',
+        audit: 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg',
+        history: 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg',
+        backup: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg'
+      };
+
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      if (activeBtn) {
+        activeBtn.className = `tab-btn flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 ${activeGradients[tabId]}`;
+      }
+
+      if (tabId === 'audit') {
+        if (currentAuditEntries.length === 0 && items.length > 0) {
+          initAuditEntriesFromItems();
+        }
+        renderAuditTable();
+      } else if (tabId === 'history') {
+        populateHistoryDateDropdown();
+        renderHistoryTable();
+      } else if (tabId === 'backup') {
+        updateBackupStats();
+      }
+    }
+
+    function renderAll() {
+      updateHeaderStats();
+      renderItemsTable();
+      renderAuditTable();
+      populateHistoryDateDropdown();
+      renderHistoryTable();
+      updateBackupStats();
+    }
+
+    // =====================================================================
+    // 5. TAB 1: ITEMS MANAGEMENT
+    // =====================================================================
+    document.getElementById('addItemForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('itemNameInput');
+      const priceInput = document.getElementById('itemPriceInput');
+
+      const name = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+
+      if (!name) {
+        showToast('يرجى إدخال اسم الصنف أولاً', 'error');
+        return;
+      }
+      if (isNaN(price) || price < 0) {
+        showToast('يرجى إدخال سعر صحيح للصنف', 'error');
+        return;
+      }
+
+      const newItem = {
+        id: 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name,
+        price
+      };
+
+      items.push(newItem);
+      saveItemsToStorage();
+
+      currentAuditEntries.push({
+        itemId: newItem.id,
+        name: newItem.name,
+        price: newItem.price,
+        systemQty: 0,
+        actualQty: 0
+      });
+
+      nameInput.value = '';
+      priceInput.value = '';
+      nameInput.focus();
+
+      renderItemsTable();
+      renderAuditTable();
+      showToast(`تم إضافة "${name}" بنجاح`, 'success');
+    });
+
+    function loadSampleItems() {
+      const samples = [
+        { name: 'كانز بيبسي / سفن', price: 20 },
+        { name: 'مياه معدنية صغيرة', price: 10 },
+        { name: 'قهوة تركي سادة / مظبوط', price: 25 },
+        { name: 'شاي بالنعناع', price: 15 },
+        { name: 'نسكافيه بلاك / 3×1', price: 30 },
+        { name: 'إندومي خضار / فراخ', price: 25 },
+        { name: 'شيبسي عائلي', price: 20 },
+        { name: 'مولتو / هوهوز', price: 15 }
+      ];
+
+      let addedCount = 0;
+      samples.forEach((s, idx) => {
+        if (!items.some(i => i.name === s.name)) {
+          const itemObj = {
+            id: 'item_' + Date.now() + '_' + idx,
+            name: s.name,
+            price: s.price
+          };
+          items.push(itemObj);
+          currentAuditEntries.push({
+            itemId: itemObj.id,
+            name: itemObj.name,
+            price: itemObj.price,
+            systemQty: 0,
+            actualQty: 0
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount === 0) {
+        showToast('الأصناف المقترحة مضافة بالفعل في قائمتك', 'info');
+        return;
+      }
+
+      saveItemsToStorage();
+      renderItemsTable();
+      renderAuditTable();
+      showToast(`تم إضافة ${addedCount} أصناف مقترحة بنجاح`, 'success');
+    }
+
+    function renderItemsTable() {
+      const tbody = document.getElementById('itemsTableBody');
+      const emptyState = document.getElementById('itemsEmptyState');
+      const searchInput = document.getElementById('itemsSearchInput');
+      const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      items.forEach((item, index) => {
+        if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) {
+          return;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'app-table-row';
+        tr.setAttribute('draggable', searchQuery ? 'false' : 'true');
+        tr.dataset.index = index;
+
+        if (!searchQuery) {
+          tr.addEventListener('dragstart', handleDragStart);
+          tr.addEventListener('dragover', handleDragOver);
+          tr.addEventListener('dragleave', handleDragLeave);
+          tr.addEventListener('drop', handleDrop);
+          tr.addEventListener('dragend', handleDragEnd);
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center">
+            <div class="inline-flex items-center justify-center gap-1">
+              <span title="اسحب لتغيير الترتيب" class="cursor-grab active:cursor-grabbing p-1.5 rounded-lg text-dim hover:text-cyan-500 transition ${searchQuery ? 'opacity-30 pointer-events-none' : ''}">
+                <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+              </span>
+              <div class="flex flex-col">
+                <button type="button" onclick="moveItem(${index}, -1)" ${index === 0 || searchQuery ? 'disabled' : ''}
+                  title="تحريك لأعلى"
+                  class="p-0.5 text-dim hover:text-cyan-500 disabled:opacity-25 disabled:pointer-events-none transition">
+                  <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                </button>
+                <button type="button" onclick="moveItem(${index}, 1)" ${index === items.length - 1 || searchQuery ? 'disabled' : ''}
+                  title="تحريك لأسفل"
+                  class="p-0.5 text-dim hover:text-cyan-500 disabled:opacity-25 disabled:pointer-events-none transition">
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center">
+            <span class="app-pill inline-flex items-center justify-center w-7 h-7 rounded-lg text-cyan-500 font-black text-xs">
+              ${index + 1}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-extrabold text-main text-sm sm:text-base">
+            ${escapeHTML(item.name)}
+          </td>
+          <td class="py-3 px-4 font-extrabold text-emerald-500">
+            ${formatMoney(item.price)}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="inline-flex items-center justify-center gap-1.5">
+              <button type="button" onclick="openEditModal('${item.id}')" title="تعديل الصنف"
+                class="p-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-500 border border-cyan-500/30 transition">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+              <button type="button" onclick="deleteItem('${item.id}')" title="حذف الصنف"
+                class="p-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 border border-rose-500/30 transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      refreshIcons();
+    }
+
+    // Drag & Drop Reordering
+    function handleDragStart(e) {
+      draggedIndex = Number(this.dataset.index);
+      this.classList.add('dragging-row');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      this.classList.add('drag-over-row');
+    }
+
+    function handleDragLeave() {
+      this.classList.remove('drag-over-row');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over-row');
+      const targetIndex = Number(this.dataset.index);
+
+      if (draggedIndex !== null && draggedIndex !== targetIndex) {
+        const [movedItem] = items.splice(draggedIndex, 1);
+        items.splice(targetIndex, 0, movedItem);
+        saveItemsToStorage();
+        syncAuditOrderWithItems();
+        renderItemsTable();
+        renderAuditTable();
+        showToast('تم تحديث ترتيب الأصناف والترقيم التلقائي', 'info');
+      }
+    }
+
+    function handleDragEnd() {
+      this.classList.remove('dragging-row');
+      document.querySelectorAll('#itemsTableBody tr').forEach(r => r.classList.remove('drag-over-row'));
+      draggedIndex = null;
+    }
+
+    function moveItem(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= items.length) return;
+
+      const temp = items[index];
+      items[index] = items[newIndex];
+      items[newIndex] = temp;
+
+      saveItemsToStorage();
+      syncAuditOrderWithItems();
+      renderItemsTable();
+      renderAuditTable();
+    }
+
+    function syncAuditOrderWithItems() {
+      const map = new Map(currentAuditEntries.map(entry => [entry.itemId, entry]));
+      currentAuditEntries = items.map(item => {
+        if (map.has(item.id)) {
+          const existing = map.get(item.id);
+          return { ...existing, name: item.name, price: item.price };
+        }
+        return {
+          itemId: item.id,
+          name: item.name,
+          price: item.price,
+          systemQty: 0,
+          actualQty: 0
+        };
+      });
+    }
+
+    // Edit Item Modal
+    function openEditModal(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('editItemId').value = item.id;
+      document.getElementById('editItemName').value = item.name;
+      document.getElementById('editItemPrice').value = item.price;
+
+      const modal = document.getElementById('editModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+      const modal = document.getElementById('editModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('editItemForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editItemId').value;
+      const newName = document.getElementById('editItemName').value.trim();
+      const newPrice = parseFloat(document.getElementById('editItemPrice').value);
+
+      if (!newName || isNaN(newPrice) || newPrice < 0) {
+        showToast('بيانات التعديل غير صحيحة', 'error');
+        return;
+      }
+
+      const idx = items.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        items[idx].name = newName;
+        items[idx].price = newPrice;
+        saveItemsToStorage();
+        syncAuditOrderWithItems();
+        renderItemsTable();
+        renderAuditTable();
+        closeEditModal();
+        showToast('تم تعديل الصنف بنجاح', 'success');
+      }
+    });
+
+    function deleteItem(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      showConfirmDialog(
+        'حذف الصنف',
+        `هل أنت متأكد من حذف الصنف "${item.name}"؟ سيتم إعادة ترقيم باقي الأصناف تلقائياً.`,
+        () => {
+          items = items.filter(i => i.id !== id);
+          currentAuditEntries = currentAuditEntries.filter(e => e.itemId !== id);
+          saveItemsToStorage();
+          renderItemsTable();
+          renderAuditTable();
+          showToast('تم حذف الصنف وإعادة الترقيم', 'info');
+        }
+      );
+    }
+
+    function exportBlankAuditSheetPDF() {
+      if (!Array.isArray(items) || items.length === 0) {
+        showToast('لا توجد أصناف مسجلة لطباعة ورقة الجرد الفارغة', 'error');
+        return;
+      }
+
+      const tbody = document.getElementById('blankAuditSheetBody');
+      const dateTimeEl = document.getElementById('blankSheetDateTime');
+      const totalItemsEl = document.getElementById('blankSheetTotalItems');
+
+      if (!tbody || !dateTimeEl || !totalItemsEl) return;
+
+      const now = new Date();
+      dateTimeEl.textContent = now.toLocaleDateString('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      totalItemsEl.textContent = items.length;
+
+      tbody.innerHTML = '';
+      items.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="text-align: center; font-weight: 800;">${index + 1}</td>
+          <td style="font-weight: 700;">${escapeHTML(item.name)}</td>
+          <td style="text-align: center; padding: 10px 14px;">
+            <div style="width: 44px; height: 26px; border: 2px solid #334155; border-radius: 4px; margin: 0 auto;"></div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.body.classList.remove('print-mode-history');
+      document.body.classList.add('print-mode-blank');
+
+      showToast('جاري تجهيز ورقة الجرد الفارغة لتصدير PDF...', 'info');
+      setTimeout(() => {
+        window.print();
+      }, 200);
+    }
+
+    // =====================================================================
+    // 6. TAB 2: NEW INVENTORY AUDIT
+    // =====================================================================
+    function initAuditEntriesFromItems() {
+      currentAuditEntries = items.map(item => ({
+        itemId: item.id,
+        name: item.name,
+        price: item.price,
+        systemQty: 0,
+        actualQty: 0
+      }));
+    }
+
+    function startNewAudit() {
+      const dateVal = document.getElementById('auditDateInput').value;
+      if (!dateVal) {
+        showToast('يرجى اختيار تاريخ الجرد أولاً', 'error');
+        return;
+      }
+      if (items.length === 0) {
+        showToast('لا توجد أصناف مضافة! أضف الأصناف من التبويب الأول أولاً', 'error');
+        switchTab('items');
+        return;
+      }
+
+      document.getElementById('activeAuditDateBadge').textContent = dateVal;
+      initAuditEntriesFromItems();
+      setAuditFilter('all');
+      renderAuditTable();
+      showToast(`تم تجهيز جدول الجرد لتاريخ ${dateVal}`, 'success');
+    }
+
+    function resetCurrentAuditQuantities() {
+      if (currentAuditEntries.length === 0) {
+        showToast('لا توجد أرقام حالية لتصفيرها', 'info');
+        return;
+      }
+      showConfirmDialog(
+        'تصفير أرقام الجرد الحالي',
+        'هل تريد تصفير كميات (السيستم) و(الفعلي) في الجرد الحالي للبدء من جديد وتصحيح الأخطاء؟',
+        () => {
+          currentAuditEntries = currentAuditEntries.map(e => ({
+            ...e,
+            systemQty: 0,
+            actualQty: 0
+          }));
+          renderAuditTable();
+          showToast('تم تصفير أرقام الجرد الحالي بنجاح', 'info');
+        }
+      );
+    }
+
+    function setAuditFilter(filterType) {
+      currentAuditFilter = filterType;
+
+      const styles = {
+        all: filterType === 'all'
+          ? 'audit-filter-btn px-3 py-2 rounded-xl text-xs font-extrabold bg-cyan-500 text-slate-950 transition'
+          : 'audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-main transition',
+        surplus: filterType === 'surplus'
+          ? 'audit-filter-btn px-3 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950 transition'
+          : 'audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-emerald-500 transition',
+        shortage: filterType === 'shortage'
+          ? 'audit-filter-btn px-3 py-2 rounded-xl text-xs font-extrabold bg-rose-500 text-white transition'
+          : 'audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-rose-500 transition',
+        matched: filterType === 'matched'
+          ? 'audit-filter-btn px-3 py-2 rounded-xl text-xs font-extrabold bg-sky-500 text-slate-950 transition'
+          : 'audit-filter-btn app-pill px-3 py-2 rounded-xl text-xs font-extrabold text-sky-500 transition'
+      };
+
+      Object.keys(styles).forEach(key => {
+        const btn = document.getElementById(`auditFilter-${key}`);
+        if (btn) btn.className = styles[key];
+      });
+
+      renderAuditTable();
+    }
+
+    function updateAuditQuantity(index, field, value) {
+      const parsed = value === '' ? 0 : parseFloat(value);
+      currentAuditEntries[index][field] = isNaN(parsed) ? 0 : parsed;
+
+      const entry = currentAuditEntries[index];
+      const diffQty = entry.actualQty - entry.systemQty;
+      const diffMoney = diffQty * entry.price;
+
+      const qtyCell = document.getElementById(`audit-diff-qty-${index}`);
+      const moneyCell = document.getElementById(`audit-diff-money-${index}`);
+
+      if (qtyCell && moneyCell) {
+        qtyCell.textContent = formatSignedNumber(diffQty);
+        moneyCell.textContent = formatSignedMoney(diffMoney);
+
+        const colorClass = diffQty > 0
+          ? 'text-emerald-500'
+          : diffQty < 0
+            ? 'text-rose-500'
+            : 'text-sky-500';
+
+        qtyCell.className = `py-3 px-3 text-center font-black ${colorClass}`;
+        moneyCell.className = `py-3 px-4 text-center font-black ${colorClass}`;
+      }
+
+      updateAuditTotalsAndCounts();
+    }
+
+    function updateAuditTotalsAndCounts() {
+      let totalSystem = 0;
+      let totalActual = 0;
+      let totalDiffQty = 0;
+      let totalDiffMoney = 0;
+      let surplusQty = 0;
+      let surplusMoney = 0;
+      let shortageQty = 0;
+      let shortageMoney = 0;
+
+      let countAll = currentAuditEntries.length;
+      let countSurplus = 0;
+      let countShortage = 0;
+      let countMatched = 0;
+
+      currentAuditEntries.forEach(entry => {
+        const diffQty = entry.actualQty - entry.systemQty;
+        const diffMoney = diffQty * entry.price;
+
+        totalSystem += entry.systemQty;
+        totalActual += entry.actualQty;
+        totalDiffQty += diffQty;
+        totalDiffMoney += diffMoney;
+
+        if (diffQty > 0) {
+          countSurplus++;
+          surplusQty += diffQty;
+          surplusMoney += diffMoney;
+        } else if (diffQty < 0) {
+          countShortage++;
+          shortageQty += diffQty;
+          shortageMoney += diffMoney;
+        } else {
+          countMatched++;
+        }
+      });
+
+      document.getElementById('countAuditAll').textContent = countAll;
+      document.getElementById('countAuditSurplus').textContent = countSurplus;
+      document.getElementById('countAuditShortage').textContent = countShortage;
+      document.getElementById('countAuditMatched').textContent = countMatched;
+
+      document.getElementById('auditSurplusBreakdown').textContent = `زيادة: +${surplusQty} قطعة (${formatMoney(surplusMoney)})`;
+      document.getElementById('auditShortageBreakdown').textContent = `عجز: ${shortageQty} قطعة (${formatMoney(shortageMoney)})`;
+
+      document.getElementById('auditTotalSystemCell').textContent = totalSystem;
+      document.getElementById('auditTotalActualCell').textContent = totalActual;
+
+      const totalQtyEl = document.getElementById('auditTotalQtyCell');
+      const totalMoneyEl = document.getElementById('auditTotalMoneyCell');
+
+      totalQtyEl.textContent = formatSignedNumber(totalDiffQty);
+      totalMoneyEl.textContent = formatSignedMoney(totalDiffMoney);
+
+      const netColor = totalDiffMoney > 0
+        ? 'text-emerald-500'
+        : totalDiffMoney < 0
+          ? 'text-rose-500'
+          : 'text-cyan-500';
+
+      totalQtyEl.className = `py-4 px-3 text-center text-base font-black ${netColor}`;
+      totalMoneyEl.className = `py-4 px-4 text-center text-base font-black ${netColor}`;
+    }
+
+    function renderAuditTable() {
+      const tbody = document.getElementById('auditTableBody');
+      const emptyState = document.getElementById('auditEmptyState');
+      tbody.innerHTML = '';
+
+      let visibleCount = 0;
+
+      currentAuditEntries.forEach((entry, index) => {
+        const diffQty = entry.actualQty - entry.systemQty;
+        const diffMoney = diffQty * entry.price;
+
+        if (currentAuditFilter === 'surplus' && diffQty <= 0) return;
+        if (currentAuditFilter === 'shortage' && diffQty >= 0) return;
+        if (currentAuditFilter === 'matched' && diffQty !== 0) return;
+
+        visibleCount++;
+
+        const diffColor = diffQty > 0
+          ? 'text-emerald-500'
+          : diffQty < 0
+            ? 'text-rose-500'
+            : 'text-sky-500';
+
+        const tr = document.createElement('tr');
+        tr.className = 'app-table-row';
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center">
+            <span class="app-pill inline-flex items-center justify-center w-7 h-7 rounded-lg font-extrabold text-xs">
+              ${index + 1}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-extrabold text-main">
+            ${escapeHTML(entry.name)}
+          </td>
+          <td class="py-3 px-3 text-sub font-bold">
+            ${formatMoney(entry.price)}
+          </td>
+          <td class="py-3 px-3 text-center">
+            <input type="number" step="any" value="${entry.systemQty}"
+              onfocus="this.select()"
+              oninput="updateAuditQuantity(${index}, 'systemQty', this.value)"
+              class="app-input w-24 sm:w-28 text-center rounded-xl py-2 px-2 text-cyan-500 font-extrabold text-sm" />
+          </td>
+          <td class="py-3 px-3 text-center">
+            <input type="number" step="any" value="${entry.actualQty}"
+              onfocus="this.select()"
+              oninput="updateAuditQuantity(${index}, 'actualQty', this.value)"
+              class="app-input w-24 sm:w-28 text-center rounded-xl py-2 px-2 text-pink-500 font-extrabold text-sm" />
+          </td>
+          <td id="audit-diff-qty-${index}" class="py-3 px-3 text-center font-black ${diffColor}">
+            ${formatSignedNumber(diffQty)}
+          </td>
+          <td id="audit-diff-money-${index}" class="py-3 px-4 text-center font-black ${diffColor}">
+            ${formatSignedMoney(diffMoney)}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      updateAuditTotalsAndCounts();
+    }
+
+    function saveCurrentAudit() {
+      const dateVal = document.getElementById('auditDateInput').value;
+      if (!dateVal) {
+        showToast('يرجى تحديد تاريخ الجرد قبل الحفظ', 'error');
+        return;
+      }
+      if (currentAuditEntries.length === 0) {
+        showToast('لا توجد أصناف في جدول الجرد لحفظها', 'error');
+        return;
+      }
+
+      const snapshotEntries = currentAuditEntries.map((entry, idx) => {
+        const diffQty = entry.actualQty - entry.systemQty;
+        const diffMoney = diffQty * entry.price;
+        return {
+          serial: idx + 1,
+          itemId: entry.itemId,
+          name: entry.name,
+          price: entry.price,
+          systemQty: entry.systemQty,
+          actualQty: entry.actualQty,
+          diffQty,
+          diffMoney
+        };
+      });
+
+      const auditBatch = {
+        id: 'audit_' + Date.now(),
+        date: dateVal,
+        createdAt: new Date().toISOString(),
+        entries: snapshotEntries
+      };
+
+      auditHistory.unshift(auditBatch);
+      saveAuditsToStorage();
+
+      initAuditEntriesFromItems();
+      renderAuditTable();
+      populateHistoryDateDropdown();
+      renderHistoryTable();
+
+      showToast(`تم حفظ جرد يوم ${dateVal} وترحيله للسجل بنجاح!`, 'success');
+      switchTab('history');
+    }
+
+    // =====================================================================
+    // 7. TAB 3: AUDIT HISTORY, EDIT AUDIT MODAL & PDF EXPORT
+    // =====================================================================
+    function populateHistoryDateDropdown() {
+      const select = document.getElementById('historyDateFilter');
+      if (!select) return;
+      const currentVal = select.value;
+
+      const uniqueDates = [...new Set(auditHistory.map(a => a.date))].sort((a, b) => b.localeCompare(a));
+
+      select.innerHTML = `<option value="all">جميع التواريخ المحفوظة (${auditHistory.length} جرد)</option>`;
+      uniqueDates.forEach(date => {
+        const countForDate = auditHistory.filter(a => a.date === date).length;
+        const opt = document.createElement('option');
+        opt.value = date;
+        opt.textContent = countForDate > 1 ? `${date} (${countForDate} عمليات جرد)` : date;
+        select.appendChild(opt);
+      });
+
+      if (uniqueDates.includes(currentVal)) {
+        select.value = currentVal;
+      } else {
+        select.value = 'all';
+      }
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('historyTableBody');
+      const emptyState = document.getElementById('historyEmptyState');
+      const dateFilter = document.getElementById('historyDateFilter').value;
+      const statusFilter = document.getElementById('historyStatusFilter').value;
+      const deleteBatchBtn = document.getElementById('deleteBatchBtn');
+      const editAuditBtn = document.getElementById('editAuditBtn');
+
+      if (editAuditBtn) {
+        if (auditHistory.length === 0) {
+          editAuditBtn.classList.add('opacity-40', 'pointer-events-none');
+        } else {
+          editAuditBtn.classList.remove('opacity-40', 'pointer-events-none');
+        }
+      }
+
+      if (dateFilter !== 'all' && auditHistory.some(a => a.date === dateFilter)) {
+        deleteBatchBtn.classList.remove('hidden');
+      } else {
+        deleteBatchBtn.classList.add('hidden');
+      }
+
+      tbody.innerHTML = '';
+
+      let filteredRows = [];
+      auditHistory.forEach(batch => {
+        if (dateFilter !== 'all' && batch.date !== dateFilter) return;
+
+        batch.entries.forEach((entry, entryIdx) => {
+          if (statusFilter === 'surplus' && entry.diffQty <= 0) return;
+          if (statusFilter === 'shortage' && entry.diffQty >= 0) return;
+          if (statusFilter === 'matched' && entry.diffQty !== 0) return;
+
+          filteredRows.push({
+            batchId: batch.id,
+            entryIdx,
+            date: batch.date,
+            ...entry
+          });
+        });
+      });
+
+      let totalQty = 0;
+      let totalMoney = 0;
+      let totalSurplusMoney = 0;
+      let totalShortageMoney = 0;
+
+      filteredRows.forEach((row, idx) => {
+        totalQty += row.diffQty;
+        totalMoney += row.diffMoney;
+        if (row.diffMoney > 0) totalSurplusMoney += row.diffMoney;
+        if (row.diffMoney < 0) totalShortageMoney += row.diffMoney;
+
+        const diffColor = row.diffQty > 0
+          ? 'text-emerald-500 print-surplus'
+          : row.diffQty < 0
+            ? 'text-rose-500 print-shortage'
+            : 'text-sky-500 print-matched';
+
+        const tr = document.createElement('tr');
+        tr.className = 'app-table-row';
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center font-bold text-dim">${idx + 1}</td>
+          <td class="py-3 px-3 font-bold text-cyan-500 whitespace-nowrap">${row.date}</td>
+          <td class="py-3 px-4 font-extrabold text-main">${escapeHTML(row.name)}</td>
+          <td class="py-3 px-3 text-sub font-semibold">${formatMoney(row.price)}</td>
+          <td class="py-3 px-3 text-center font-bold text-main">${row.systemQty}</td>
+          <td class="py-3 px-3 text-center font-bold text-main">${row.actualQty}</td>
+          <td class="py-3 px-3 text-center font-black ${diffColor}">${formatSignedNumber(row.diffQty)}</td>
+          <td class="py-3 px-4 text-center font-black ${diffColor}">${formatSignedMoney(row.diffMoney)}</td>
+          <td class="py-3 px-2 text-center no-print">
+            <button type="button" onclick="openEditAuditModal('${row.batchId}', '${escapeHTML(row.name)}')"
+              title="تعديل هذا الصنف في الجرد"
+              class="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 transition">
+              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (filteredRows.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      const netColor = totalMoney > 0
+        ? 'text-emerald-500 print-surplus'
+        : totalMoney < 0
+          ? 'text-rose-500 print-shortage'
+          : 'text-cyan-500';
+
+      document.getElementById('historyStatCount').textContent = `${filteredRows.length} صنف`;
+      document.getElementById('historyStatSurplus').textContent = formatSignedMoney(totalSurplusMoney);
+      document.getElementById('historyStatShortage').textContent = formatSignedMoney(totalShortageMoney);
+      document.getElementById('historyStatQtyDiff').textContent = `${formatSignedNumber(totalQty)} قطعة`;
+
+      const statMoneyEl = document.getElementById('historyStatMoneyDiff');
+      statMoneyEl.textContent = formatSignedMoney(totalMoney);
+      statMoneyEl.className = `text-xl sm:text-2xl font-black mt-1 ${netColor}`;
+
+      const footerQtyEl = document.getElementById('historyFooterQty');
+      footerQtyEl.textContent = formatSignedNumber(totalQty);
+      footerQtyEl.className = `py-4 px-3 text-center font-black text-base ${netColor}`;
+
+      const footerMoneyEl = document.getElementById('historyFooterMoney');
+      footerMoneyEl.textContent = formatSignedMoney(totalMoney);
+      footerMoneyEl.className = `py-4 px-4 text-center font-black text-base ${netColor}`;
+
+      refreshIcons();
+    }
+
+    // =====================================================================
+    // EDIT AUDIT MODAL LOGIC (تعديل سجل الجرد)
+    // =====================================================================
+    function openEditAuditModal(preferredBatchId = null, prefillSearch = '') {
+      if (!Array.isArray(auditHistory) || auditHistory.length === 0) {
+        showToast('لا توجد سجلات جرد محفوظة لتعديلها', 'error');
+        return;
+      }
+
+      const dateFilterSelect = document.getElementById('historyDateFilter');
+      const selectedDateFilter = dateFilterSelect ? dateFilterSelect.value : 'all';
+
+      let targetBatch = null;
+      if (preferredBatchId) {
+        targetBatch = auditHistory.find(b => b.id === preferredBatchId);
+      }
+      if (!targetBatch && selectedDateFilter !== 'all') {
+        targetBatch = auditHistory.find(b => b.date === selectedDateFilter);
+      }
+      if (!targetBatch) {
+        targetBatch = auditHistory[0];
+      }
+
+      // Populate batch switcher dropdown so user can easily switch between batches
+      const batchSelectWrapper = document.getElementById('editAuditBatchSelectWrapper');
+      const batchSelect = document.getElementById('editAuditBatchSelect');
+      candidateBatchesForEdit = selectedDateFilter !== 'all'
+        ? auditHistory.filter(b => b.date === selectedDateFilter)
+        : auditHistory;
+
+      if (candidateBatchesForEdit.length > 1) {
+        batchSelectWrapper.classList.remove('hidden');
+        batchSelect.innerHTML = '';
+        candidateBatchesForEdit.forEach((b, idx) => {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = `${b.date} — عملية #${candidateBatchesForEdit.length - idx} (${b.entries.length} أصناف)`;
+          batchSelect.appendChild(opt);
+        });
+        batchSelect.value = targetBatch.id;
+      } else {
+        batchSelectWrapper.classList.add('hidden');
+      }
+
+      loadBatchIntoEditModal(targetBatch, prefillSearch);
+
+      const modal = document.getElementById('editAuditModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      refreshIcons();
+    }
+
+    function switchEditingAuditBatch(batchId) {
+      const batch = auditHistory.find(b => b.id === batchId);
+      if (!batch) return;
+      loadBatchIntoEditModal(batch, document.getElementById('editAuditSearchInput').value);
+    }
+
+    function loadBatchIntoEditModal(batch, searchVal = '') {
+      editingBatchId = batch.id;
+      editingDraftEntries = batch.entries.map(e => ({
+        itemId: e.itemId,
+        name: e.name,
+        price: Number(e.price) || 0,
+        systemQty: Number(e.systemQty) || 0,
+        actualQty: Number(e.actualQty) || 0
+      }));
+
+      document.getElementById('editAuditDateInput').value = batch.date || '';
+      const searchInput = document.getElementById('editAuditSearchInput');
+      searchInput.value = searchVal;
+
+      document.getElementById('editAuditModalSubtitle').textContent =
+        `تعديل جرد بتاريخ (${batch.date}) — يضم ${editingDraftEntries.length} صنف`;
+
+      renderEditAuditModalTable();
+      updateEditAuditModalSummary();
+    }
+
+    function closeEditAuditModal() {
+      const modal = document.getElementById('editAuditModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      editingBatchId = null;
+      editingDraftEntries = [];
+    }
+
+    function updateDraftEntryField(index, field, rawVal) {
+      if (!editingDraftEntries[index]) return;
+      const parsed = rawVal === '' ? 0 : parseFloat(rawVal);
+      editingDraftEntries[index][field] = isNaN(parsed) ? 0 : parsed;
+
+      const entry = editingDraftEntries[index];
+      const diffQty = entry.actualQty - entry.systemQty;
+      const diffMoney = diffQty * entry.price;
+
+      const qtyCell = document.getElementById(`modal-diff-qty-${index}`);
+      const moneyCell = document.getElementById(`modal-diff-money-${index}`);
+
+      const colorClass = diffQty > 0
+        ? 'text-emerald-500'
+        : diffQty < 0
+          ? 'text-rose-500'
+          : 'text-sky-500';
+
+      if (qtyCell) {
+        qtyCell.textContent = formatSignedNumber(diffQty);
+        qtyCell.className = `py-2.5 px-2 text-center font-black ${colorClass}`;
+      }
+      if (moneyCell) {
+        moneyCell.textContent = formatSignedMoney(diffMoney);
+        moneyCell.className = `py-2.5 px-3 text-center font-black ${colorClass}`;
+      }
+
+      updateEditAuditModalSummary();
+    }
+
+    function matchSingleDraftEntry(index) {
+      if (!editingDraftEntries[index]) return;
+      editingDraftEntries[index].actualQty = editingDraftEntries[index].systemQty;
+      renderEditAuditModalTable();
+      updateEditAuditModalSummary();
+      showToast(`تمت مطابقة "${editingDraftEntries[index].name}" مع السيستم`, 'info');
+    }
+
+    function matchAllActualToSystemInModal() {
+      if (editingDraftEntries.length === 0) return;
+      editingDraftEntries.forEach(entry => {
+        entry.actualQty = entry.systemQty;
+      });
+      renderEditAuditModalTable();
+      updateEditAuditModalSummary();
+      showToast('تمت مطابقة جميع الكميات الفعلية مع السيستم في المسودة', 'info');
+    }
+
+    function updateEditAuditModalSummary() {
+      let totalSys = 0;
+      let totalAct = 0;
+      let totalQtyDiff = 0;
+      let totalMoneyDiff = 0;
+      let surplusMoney = 0;
+      let shortageMoney = 0;
+
+      editingDraftEntries.forEach(e => {
+        const diffQty = e.actualQty - e.systemQty;
+        const diffMoney = diffQty * e.price;
+        totalSys += e.systemQty;
+        totalAct += e.actualQty;
+        totalQtyDiff += diffQty;
+        totalMoneyDiff += diffMoney;
+        if (diffMoney > 0) surplusMoney += diffMoney;
+        if (diffMoney < 0) shortageMoney += diffMoney;
+      });
+
+      document.getElementById('modalTotalSystem').textContent = totalSys;
+      document.getElementById('modalTotalActual').textContent = totalAct;
+      document.getElementById('modalTotalSurplus').textContent = formatSignedMoney(surplusMoney);
+      document.getElementById('modalTotalShortage').textContent = formatSignedMoney(shortageMoney);
+      document.getElementById('modalNetQty').textContent = `(${formatSignedNumber(totalQtyDiff)} قطعة)`;
+
+      const netMoneyEl = document.getElementById('modalNetMoney');
+      netMoneyEl.textContent = formatSignedMoney(totalMoneyDiff);
+      netMoneyEl.className = totalMoneyDiff > 0
+        ? 'text-emerald-500 font-black'
+        : totalMoneyDiff < 0
+          ? 'text-rose-500 font-black'
+          : 'text-cyan-500 font-black';
+    }
+
+    function renderEditAuditModalTable() {
+      const tbody = document.getElementById('editAuditModalBody');
+      const searchQuery = (document.getElementById('editAuditSearchInput')?.value || '').trim().toLowerCase();
+      tbody.innerHTML = '';
+
+      editingDraftEntries.forEach((entry, idx) => {
+        if (searchQuery && !entry.name.toLowerCase().includes(searchQuery)) return;
+
+        const diffQty = entry.actualQty - entry.systemQty;
+        const diffMoney = diffQty * entry.price;
+        const colorClass = diffQty > 0
+          ? 'text-emerald-500'
+          : diffQty < 0
+            ? 'text-rose-500'
+            : 'text-sky-500';
+
+        const tr = document.createElement('tr');
+        tr.className = 'app-table-row';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-center font-bold text-dim">${idx + 1}</td>
+          <td class="py-2.5 px-3 font-extrabold text-main">${escapeHTML(entry.name)}</td>
+          <td class="py-2.5 px-2 text-center">
+            <input type="number" step="0.01" min="0" value="${entry.price}"
+              onfocus="this.select()"
+              oninput="updateDraftEntryField(${idx}, 'price', this.value)"
+              class="app-input w-20 sm:w-24 text-center rounded-lg py-1.5 px-2 font-bold text-xs sm:text-sm" />
+          </td>
+          <td class="py-2.5 px-2 text-center">
+            <input type="number" step="any" value="${entry.systemQty}"
+              onfocus="this.select()"
+              oninput="updateDraftEntryField(${idx}, 'systemQty', this.value)"
+              class="app-input w-20 sm:w-24 text-center rounded-lg py-1.5 px-2 text-cyan-500 font-extrabold text-xs sm:text-sm" />
+          </td>
+          <td class="py-2.5 px-2 text-center">
+            <input type="number" step="any" value="${entry.actualQty}"
+              onfocus="this.select()"
+              oninput="updateDraftEntryField(${idx}, 'actualQty', this.value)"
+              class="app-input w-20 sm:w-24 text-center rounded-lg py-1.5 px-2 text-pink-500 font-extrabold text-xs sm:text-sm" />
+          </td>
+          <td id="modal-diff-qty-${idx}" class="py-2.5 px-2 text-center font-black ${colorClass}">
+            ${formatSignedNumber(diffQty)}
+          </td>
+          <td id="modal-diff-money-${idx}" class="py-2.5 px-3 text-center font-black ${colorClass}">
+            ${formatSignedMoney(diffMoney)}
+          </td>
+          <td class="py-2.5 px-2 text-center">
+            <button type="button" onclick="matchSingleDraftEntry(${idx})" title="جعل الفعلي مساوياً للسيستم"
+              class="p-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-500 border border-sky-500/30 transition">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      refreshIcons();
+    }
+
+    function saveEditedAuditBatch() {
+      if (!editingBatchId) return;
+
+      const newDate = document.getElementById('editAuditDateInput').value;
+      if (!newDate) {
+        showToast('يرجى تحديد تاريخ صحيح للجرد', 'error');
+        return;
+      }
+
+      const batchIndex = auditHistory.findIndex(b => b.id === editingBatchId);
+      if (batchIndex === -1) {
+        showToast('تعذر العثور على سجل الجرد المطلوب تعديله', 'error');
+        return;
+      }
+
+      const updatedEntries = editingDraftEntries.map((entry, idx) => {
+        const diffQty = entry.actualQty - entry.systemQty;
+        const diffMoney = diffQty * entry.price;
+        return {
+          serial: idx + 1,
+          itemId: entry.itemId,
+          name: entry.name,
+          price: entry.price,
+          systemQty: entry.systemQty,
+          actualQty: entry.actualQty,
+          diffQty,
+          diffMoney
+        };
+      });
+
+      auditHistory[batchIndex] = {
+        ...auditHistory[batchIndex],
+        date: newDate,
+        updatedAt: new Date().toISOString(),
+        entries: updatedEntries
+      };
+
+      saveAuditsToStorage();
+      populateHistoryDateDropdown();
+
+      // Keep the updated date selected if it exists
+      const dateSelect = document.getElementById('historyDateFilter');
+      if (dateSelect && [...dateSelect.options].some(o => o.value === newDate)) {
+        dateSelect.value = newDate;
+      }
+
+      renderHistoryTable();
+      closeEditAuditModal();
+      showToast(`تم حفظ تعديلات الجرد بتاريخ ${newDate} بنجاح!`, 'success');
+    }
+
+    function confirmDeleteAuditBatch() {
+      const dateFilter = document.getElementById('historyDateFilter').value;
+      if (dateFilter === 'all') return;
+
+      showConfirmDialog(
+        'حذف سجل الجرد',
+        `هل أنت متأكد من حذف جميع سجلات الجرد المحفوظة بتاريخ ${dateFilter}؟`,
+        () => {
+          auditHistory = auditHistory.filter(a => a.date !== dateFilter);
+          saveAuditsToStorage();
+          populateHistoryDateDropdown();
+          renderHistoryTable();
+          showToast(`تم حذف سجل جرد ${dateFilter}`, 'info');
+        }
+      );
+    }
+
+    function exportReportToPDF() {
+      const dateSelect = document.getElementById('historyDateFilter');
+      const statusSelect = document.getElementById('historyStatusFilter');
+
+      const now = new Date();
+      document.getElementById('printGeneratedDate').textContent = now.toLocaleDateString('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      document.getElementById('printFilterDateLabel').textContent = dateSelect.options[dateSelect.selectedIndex].text;
+      document.getElementById('printFilterStatusLabel').textContent = statusSelect.options[statusSelect.selectedIndex].text;
+
+      document.body.classList.remove('print-mode-blank');
+      document.body.classList.add('print-mode-history');
+
+      showToast('جاري فتح نافذة حفظ التقرير بصيغة PDF...', 'info');
+      setTimeout(() => {
+        window.print();
+      }, 250);
+    }
+
+    // =====================================================================
+    // 8. TAB 4: LOCAL BACKUP, RESTORE & FACTORY RESET
+    // =====================================================================
+    function updateBackupStats() {
+      const itemsEl = document.getElementById('backupItemsCount');
+      const auditsEl = document.getElementById('backupAuditsCount');
+      const sizeEl = document.getElementById('backupStorageSize');
+      if (!itemsEl) return;
+
+      itemsEl.textContent = items.length;
+      auditsEl.textContent = auditHistory.length;
+
+      const payload = JSON.stringify({ items, auditHistory });
+      const bytes = new Blob([payload]).size;
+      sizeEl.textContent = `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    function exportBackupJSON() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const backupPayload = {
+        app: 'Glitch PlayStation & Cafe Inventory System',
+        brand: 'جليتش بلايستيشن & كافيه',
+        version: '2.0',
+        exportedAt: new Date().toISOString(),
+        exportDate: dateStr,
+        items,
+        auditHistory
+      };
+
+      const jsonString = JSON.stringify(backupPayload, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Glitch_Cafe_Backup_${dateStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast(`تم تنزيل النسخة الاحتياطية Glitch_Cafe_Backup_${dateStr}.json`, 'success');
+    }
+
+    function handleBackupFileSelect(event) {
+      const file = event.target.files[0];
+      const previewBox = document.getElementById('backupPreviewBox');
+      const restoreBtn = document.getElementById('confirmRestoreBtn');
+      const fileNameLabel = document.getElementById('selectedBackupFileName');
+
+      pendingBackupData = null;
+      previewBox.classList.add('hidden');
+      restoreBtn.disabled = true;
+
+      if (!file) {
+        fileNameLabel.textContent = 'اضغط لاختيار ملف النسخة الاحتياطية (.json)';
+        return;
+      }
+
+      fileNameLabel.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.auditHistory)) {
+            showToast('ملف غير صالح! اختر ملف نسخة احتياطية خاص بالبرنامج.', 'error');
+            fileNameLabel.textContent = 'ملف غير صالح — اختر ملفاً آخر (.json)';
+            return;
+          }
+
+          pendingBackupData = {
+            items: parsed.items,
+            auditHistory: parsed.auditHistory,
+            exportDate: parsed.exportDate || (parsed.exportedAt ? parsed.exportedAt.split('T')[0] : 'غير محدد')
+          };
+
+          document.getElementById('backupPreviewItems').textContent = `${pendingBackupData.items.length} صنف`;
+          document.getElementById('backupPreviewAudits').textContent = `${pendingBackupData.auditHistory.length} جرد`;
+          document.getElementById('backupPreviewDate').textContent = `تاريخ النسخة: ${pendingBackupData.exportDate}`;
+
+          previewBox.classList.remove('hidden');
+          restoreBtn.disabled = false;
+          refreshIcons();
+          showToast('تم فحص ملف النسخة الاحتياطية بنجاح', 'info');
+        } catch (err) {
+          showToast('تعذر قراءة الملف! تأكد أنه ملف JSON سليم.', 'error');
+          fileNameLabel.textContent = 'خطأ في قراءة الملف — اختر ملفاً آخر';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function confirmRestoreBackup() {
+      if (!pendingBackupData) return;
+
+      showConfirmDialog(
+        'استعادة النسخة الاحتياطية',
+        `سيتم استبدال البيانات الحالية بـ (${pendingBackupData.items.length} صنف و ${pendingBackupData.auditHistory.length} سجل جرد). هل تريد المتابعة؟`,
+        () => {
+          items = pendingBackupData.items;
+          auditHistory = pendingBackupData.auditHistory;
+
+          saveItemsToStorage();
+          saveAuditsToStorage();
+          initAuditEntriesFromItems();
+          renderAll();
+
+          pendingBackupData = null;
+          document.getElementById('backupFileInput').value = '';
+          document.getElementById('selectedBackupFileName').textContent = 'اضغط لاختيار ملف النسخة الاحتياطية (.json)';
+          document.getElementById('backupPreviewBox').classList.add('hidden');
+          document.getElementById('confirmRestoreBtn').disabled = true;
+
+          showToast('تمت استعادة النسخة الاحتياطية بنجاح!', 'success');
+        }
+      );
+    }
+
+    function initiateFactoryReset() {
+      const modal = document.getElementById('factoryResetModal');
+      const input = document.getElementById('resetConfirmWordInput');
+      const execBtn = document.getElementById('executeFactoryResetBtn');
+      const summaryText = document.getElementById('resetSummaryText');
+
+      summaryText.textContent = `${items.length} صنف مسجل و ${auditHistory.length} عملية جرد محفوظة`;
+      input.value = '';
+      execBtn.disabled = true;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      refreshIcons();
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function closeFactoryResetModal() {
+      const modal = document.getElementById('factoryResetModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function validateResetConfirmationInput() {
+      const val = document.getElementById('resetConfirmWordInput').value.trim();
+      document.getElementById('executeFactoryResetBtn').disabled = (val !== 'مسح');
+    }
+
+    function executeFactoryReset() {
+      const val = document.getElementById('resetConfirmWordInput').value.trim();
+      if (val !== 'مسح') return;
+
+      localStorage.removeItem(STORAGE_KEYS.ITEMS);
+      localStorage.removeItem(STORAGE_KEYS.AUDITS);
+
+      items = [];
+      auditHistory = [];
+      currentAuditEntries = [];
+      pendingBackupData = null;
+
+      setDefaultAuditDate();
+      renderAll();
+      closeFactoryResetModal();
+
+      showToast('تم مسح البرنامج بالكامل وإعادة ضبط المصنع بنجاح', 'info');
+      switchTab('items');
+    }
+  </script>
+</body>
+</html>
